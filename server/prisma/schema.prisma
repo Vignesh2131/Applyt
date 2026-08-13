@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User{
+  id String @id @default(uuid())
+  name String
+  username String? @unique
+  email String @unique
+  password String 
+  applications Application[]
+  createdAt DateTime @default(now())
+}
+
+enum ApplicationStatus{
+  WISHLIST
+  APPLIED
+  OA
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+model Application{
+  id String @id @default(uuid())
+  user User @relation(fields: [userId],references: [id])
+  userId String
+  jobTitle String
+  salary Int?
+  companyName String
+  source String?
+  notes String?
+  appliedDate DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  applicationStatus ApplicationStatus @default(WISHLIST)
+  statusHistory StatusHistory[]
+  tags ApplicationTag[]
+}
+
+model StatusHistory{
+  id String @id @default(uuid())
+  name String
+  applicationId String
+  application Application @relation(fields: [applicationId],references: [id],onDelete: Cascade)
+  status ApplicationStatus
+  note String?
+  changedAt DateTime @default(now())
+}
+
+model Tag{
+  id String @id @default(uuid())
+  name String @unique
+  applications ApplicationTag[]
+}
+
+model ApplicationTag{
+  applicationId String
+  tagId String
+  application Application @relation(fields: [applicationId],references: [id], onDelete: Cascade)
+  tag Tag @relation(fields: [tagId],references: [id])
+  @@id([applicationId, tagId])
+}
